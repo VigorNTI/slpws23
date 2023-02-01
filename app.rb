@@ -78,24 +78,6 @@ post('/login') do
   end
 end
 
-get("/suppliers") do
-  result = grab_db().execute("SELECT * FROM suppliers")
-  slim(:"suppliers/index", locals:{user:get_user(), suppliers:result})
-end
-
-post("/suppliers") do
-  uid = session[:id].to_i
-  product_name = params[:supplier_name]
-  supplier_id = params[:supplier_origin]
-  db = grab_db()
-  result = db.execute("SELECT admin FROM users WHERE user_id = ?", uid)
-  if result["admin"] == 0 then
-    return "You are not admin"
-  end
-  db.execute("INSERT INTO suppliers (name, origin) VALUES (?,?)", supplier_name, supplier_origin)
-  redirect('/suppliers')
-end
-
 def by_key(table)
   hash = {}
   for row in table do
@@ -112,6 +94,37 @@ def name_by_key(table)
   return hash
 end
 
+def check_admin()
+  user = get_user()
+  if user == nil or !user["admin"] then
+    halt 401, {'Content-Type' => 'text/plain'}, 'You should not be here'
+  end
+end
+
+###################################################################################################################################
+########################################################   SUPPLIERS   ############################################################
+###################################################################################################################################
+
+get("/suppliers") do
+  result = grab_db().execute("SELECT * FROM suppliers")
+  slim(:"suppliers/index", locals:{user:get_user(), suppliers:result})
+end
+
+post("/suppliers") do
+  check_admin()
+  uid = session[:id].to_i
+  product_name = params[:supplier_name]
+  supplier_id = params[:supplier_origin]
+  db = grab_db()
+  result = db.execute("SELECT admin FROM users WHERE user_id = ?", uid)
+  db.execute("INSERT INTO suppliers (name, origin) VALUES (?,?)", supplier_name, supplier_origin)
+  redirect('/suppliers')
+end
+
+##################################################################################################################################
+########################################################   PRODUCTS   ############################################################
+##################################################################################################################################
+
 get("/products") do
   suppliers = by_key(grab_db().execute("SELECT * FROM suppliers"))
   result = grab_db().execute("SELECT * FROM products")
@@ -119,18 +132,11 @@ get("/products") do
 end
 
 before("/products/*") do
-  p "hello"
+  check_admin()
 end
 
 get('/products/:id/edit') do
   user = get_user()
-  if user == nil then
-    redirect('/')
-    return
-  end
-  if !user["admin"] then
-    return "You're not an admin, <a href='/'>Go Back</a>"
-  end
   product_id = params[:id]
   db = grab_db()
   product_data = db.execute("SELECT * FROM products WHERE id = ?", product_id).first
@@ -140,14 +146,6 @@ get('/products/:id/edit') do
 end
 
 post('/products/:id/update') do
-  user = get_user()
-  if user == nil then
-    redirect('/')
-    return
-  end
-  if !user["admin"] then
-    return "You're not an admin, <a href='/'>Go Back</a>"
-  end
   product_name = params["name"]
   supplier_name = params["supplier"]
   product_id = params[:id]
@@ -172,14 +170,7 @@ get('/products/:id/showcase_img') do
 end
 
 post('/products') do
-  user = get_user()
-  if !user then
-    redirect('/')
-    return
-  end
-  if !user["admin"] then
-    return "You're not an admin, <a href='/'>Go Back</a>"
-  end
+  check_admin();
   product_name = params["name"]
   db = grab_db()
   db.execute("INSERT INTO products (name, supplier_id) VALUES (?,0)", product_name)
@@ -187,14 +178,6 @@ post('/products') do
 end
 
 post('/products/:id/delete') do
-  user = get_user()
-  if !user then
-    redirect('/')
-    return
-  end
-  if !user["admin"] then
-    return "You're not an admin, <a href='/'>Go Back</a>"
-  end
   db = grab_db()
   p db.execute("DELETE FROM products WHERE id = ?", params["id"])
   return "OK"
