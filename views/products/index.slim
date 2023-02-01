@@ -1,0 +1,27 @@
+script src="js/products.js"
+h1 Our products!
+
+main#products
+  article.container
+    - products.each do |product|
+      article style="border-style: solid; margin-bottom: 1rem; padding: 1rem;"
+        - if user and user["admin"] then
+          img.remove src="/img/remove.svg" onclick="javascript: remove(#{product['id']}, this)"
+        figure style="background-image: url('../img/butter.jpg');"
+        span.info
+          h2 #{product["name"]}
+          - if suppliers[product["supplier_id"]]
+            p #{suppliers[product["supplier_id"]]["name"]}
+          - else
+            p Unknown
+        span.price
+          h2 29:90
+        span.buy
+          - if user and user["admin"] then
+            a.edit href="/products/#{product['id']}/edit" Edit
+          a.buy Add to cart
+
+- if user and user["admin"] then
+  form#add_product method="POST" action="/products"
+    input type="text"  name="name" value="" placeholder="Product name"
+    input type="submit" value="Add product!"
