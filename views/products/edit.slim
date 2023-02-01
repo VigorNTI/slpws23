@@ -1,6 +1,11 @@
 center
-  form#edit_form method="POST" action="/products/#{product['id']}/update"
+  form#edit_form method="POST" action="/products/#{product['id']}/update" enctype="multipart/form-data"
     table
+      tr
+        td
+          label for="picture" Product picture
+        td
+          input type="file" name="picture" id="picture_input"
       tr
         td
           label for="name" Name

@@ -151,6 +151,8 @@ post('/products/:id/update') do
   product_name = params["name"]
   supplier_name = params["supplier"]
   product_id = params[:id]
+  product_fn = params["picture"]["filename"]
+  product_f  = params["picture"]["tempfile"]
 
   db = grab_db()
   supplier = db.execute("SELECT id FROM suppliers WHERE name = ?", supplier_name).first
@@ -158,8 +160,15 @@ post('/products/:id/update') do
     return "Supplier #{supplier_name} doesn't exist"
   end
   supplier_id = supplier["id"]
-  db.execute("UPDATE products SET name = ?, supplier_id = ? WHERE id = ?", product_name, supplier_id, product_id)
+  db.execute("UPDATE products SET name = ?, supplier_id = ?, showcase_img = ? WHERE id = ?", product_name, supplier_id, SQLite3::Blob.new(product_f.read()), product_id)
   redirect('/')
+end
+
+get('/products/:id/showcase_img') do
+  db = grab_db()
+  response.headers['Content-Type'] = 'image/webp'
+  sio = StringIO.new(db.execute("SELECT showcase_img FROM products WHERE id=?", params[:id]).first["showcase_img"])
+  return sio.read
 end
 
 post('/products') do

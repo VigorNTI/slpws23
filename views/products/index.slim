@@ -7,7 +7,7 @@ main#products
       article style="border-style: solid; margin-bottom: 1rem; padding: 1rem;"
         - if user and user["admin"] then
           img.remove src="/img/remove.svg" onclick="javascript: remove(#{product['id']}, this)"
-        figure style="background-image: url('../img/butter.jpg');"
+        figure style="background-image: url('/products/#{product['id']}/showcase_img');"
         span.info
           h2 #{product["name"]}
           - if suppliers[product["supplier_id"]]
