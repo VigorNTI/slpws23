@@ -1,4 +1,4 @@
-script src="js/products.js"
+script src="js/products.js?v=1"
 - if s_id then
   - if suppliers[s_id] then
     h1 Our products from #{suppliers[s_id]["name"]}
@@ -14,13 +14,15 @@ main#products
         - if user and user["admin"] then
           img.remove src="/img/remove.svg" onclick="javascript: remove(#{product['id']}, this)"
         figure style="background-image: url('/products/#{product['id']}/showcase_img');"
-        span.info
+        span.name
           h2 #{product["name"]}
-          - if suppliers[product["supplier_id"]]
-            p #{suppliers[product["supplier_id"]]["name"]}
-          - else
-            p Unknown
-        span.price
+        span.info
+          span.supplier
+            - if suppliers[product["supplier_id"]]
+              img src="/suppliers/#{product["supplier_id"]}/showcase_img"
+              p #{suppliers[product["supplier_id"]]["name"]}
+            - else
+              p Unknown
           h2 29:90
         span.buy
           - if user and user["admin"] then

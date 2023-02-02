@@ -1,8 +1,7 @@
 function remove(id, btn)
 {
-	s = btn.parentElement.getElementsByClassName("info")[0];
-	e = s.children[0];
-	e2 = s.children[1];
+	e = btn.parentElement.getElementsByClassName("name")[0].children[0];
+	e2= btn.parentElement.getElementsByClassName("supplier")[0].getElementsByTagName("p")[0];
 	if (!confirm("Are you sure you want to remove " + e.innerHTML + " by " + e2.innerHTML + "?"))
 	{
 		return;
