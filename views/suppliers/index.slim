@@ -6,19 +6,27 @@ main#suppliers
     table.container
       tr
         th
+          Image
+        th
           p Name
         th
           p Origin
         - if user and user["admin"] then
           th
-            p Action
+            p Edit?
+          th
+            p Remove?
       - suppliers.each do |supplier|
         tr
+          td
+            figure style="background-image: url('/suppliers/#{supplier['id']}/showcase_img');"
           td
             a href="/products?supplier=#{supplier['id']}" #{supplier["name"]}
           td
             p = supplier["origin"]
           - if user and user["admin"] then
+            td
+              a href="/suppliers/#{supplier['id']}/edit" style="color: yellow; font-weight: bold; text-shadow: black 1px 0 10px;" Edit
             td
               p onclick="javascript: remove(#{supplier['id']}, this)" style="color: red; font-weight: bold;" Remove
 

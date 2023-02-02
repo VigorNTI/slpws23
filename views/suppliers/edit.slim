@@ -1,0 +1,19 @@
+center
+  form#edit_form method="POST" action="/suppliers/#{supplier['id']}/update" enctype="multipart/form-data"
+    table
+      tr
+        td
+          label for="picture" Product picture
+        td
+          input type="file" name="picture" id="picture_input"
+      tr
+        td
+          label for="name" Name
+        td
+          input type="text" name="name" value="#{supplier['name']}"
+      tr
+        td
+          label for="supplier" Origin
+        td
+          input type="text" name="origin" value="#{supplier['origin']}"
+    input type="submit" value="Save"

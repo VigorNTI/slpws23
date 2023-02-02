@@ -134,6 +134,40 @@ post('/suppliers/:id/delete') do
   return "OK"
 end
 
+get('/suppliers/:id/edit') do
+  user = get_user()
+  supplier_id = params[:id]
+  db = grab_db()
+  supplier = db.execute("SELECT * FROM suppliers WHERE id = ?", supplier_id).first
+  slim(:'suppliers/edit', locals:{user:user, supplier:supplier})
+end
+
+post('/suppliers/:id/update') do
+  supplier_id = params[:id]
+  supplier_name = params["name"]
+  supplier_origin = params["origin"]
+
+  db = grab_db()
+
+  if params["picture"] then
+    pic_tempfile = params["picture"]["tempfile"]
+    db.execute("UPDATE suppliers SET name = ?, origin = ?, showcase_img = ? WHERE id = ?", supplier_name, supplier_origin, SQLite3::Blob.new(pic_tempfile.read()), supplier_id)
+  else
+    db.execute("UPDATE suppliers SET name = ?, origin = ? WHERE id = ?", supplier_name, supplier_origin, supplier_id)
+  end
+  redirect('/suppliers')
+end
+
+get('/suppliers/:id/showcase_img') do
+  db = grab_db()
+  response.headers['Content-Type'] = 'image/webp'
+  if db.execute("Select showcase_img FROM suppliers WHERE id=?", params[:id]).first["showcase_img"] then
+    sio = StringIO.new(db.execute("SELECT showcase_img FROM suppliers WHERE id=?", params[:id]).first["showcase_img"])
+    return sio.read
+  end
+    return ""
+end
+
 ##################################################################################################################################
 ########################################################   PRODUCTS   ############################################################
 ##################################################################################################################################
@@ -172,8 +206,6 @@ post('/products/:id/update') do
   product_name = params["name"]
   supplier_name = params["supplier"]
   product_id = params[:id]
-  product_fn = params["picture"]["filename"]
-  product_f  = params["picture"]["tempfile"]
 
   db = grab_db()
   supplier = db.execute("SELECT id FROM suppliers WHERE name = ?", supplier_name).first
@@ -181,7 +213,13 @@ post('/products/:id/update') do
     return "Supplier #{supplier_name} doesn't exist"
   end
   supplier_id = supplier["id"]
-  db.execute("UPDATE products SET name = ?, supplier_id = ?, showcase_img = ? WHERE id = ?", product_name, supplier_id, SQLite3::Blob.new(product_f.read()), product_id)
+  if params["picture"] then
+    product_fn = params["picture"]["filename"]
+    product_f  = params["picture"]["tempfile"]
+    db.execute("UPDATE products SET name = ?, supplier_id = ?, showcase_img = ? WHERE id = ?", product_name, supplier_id, SQLite3::Blob.new(product_f.read()), product_id)
+  else
+    db.execute("UPDATE products SET name = ?, supplier_id = ? WHERE id = ?", product_name, supplier_id, product_id)
+  end
   redirect('/')
 end
 

@@ -159,6 +159,14 @@ body > h1 {
 #suppliers tr:hover:not(:first-child) td:first-child p {
 	transform: scale(1.3);
 }
+#suppliers figure {
+	margin: 0;
+	height: 50px;
+	width: 100px;
+	background-size: cover;
+	background-position: 50%;
+	background-repeat: no-repeat;
+}
 
 #add_supplier {
 	position: fixed;
