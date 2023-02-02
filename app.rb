@@ -136,7 +136,14 @@ get("/products") do
   slim(:"products/index", locals:{user:get_user(), products:result, suppliers:suppliers, s_id:s_id})
 end
 
+product_auth_exceptions = ['showcase_img']
+
 before("/products/*") do
+  p product_auth_exceptions
+  p request.path_info
+  if product_auth_exceptions.any? { |s| request.path_info.include? s } then
+    return
+  end
   check_admin()
 end
 
