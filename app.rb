@@ -105,6 +105,15 @@ end
 ########################################################   SUPPLIERS   ############################################################
 ###################################################################################################################################
 
+suppliers_auth_exceptions = ['showcase_img']
+
+before("/suppliers/*") do
+  if suppliers_auth_exceptions.any? { |s| request.path_info.include? s } then
+    return
+  end
+  check_admin()
+end
+
 get("/suppliers") do
   result = grab_db().execute("SELECT * FROM suppliers")
   slim(:"suppliers/index", locals:{user:get_user(), suppliers:result})
@@ -113,12 +122,16 @@ end
 post("/suppliers") do
   check_admin()
   uid = session[:id].to_i
-  product_name = params[:supplier_name]
-  supplier_id = params[:supplier_origin]
+  supplier_name = params["name"]
   db = grab_db()
-  result = db.execute("SELECT admin FROM users WHERE user_id = ?", uid)
-  db.execute("INSERT INTO suppliers (name, origin) VALUES (?,?)", supplier_name, supplier_origin)
+  db.execute("INSERT INTO suppliers (name) VALUES (?)", supplier_name)
   redirect('/suppliers')
+end
+
+post('/suppliers/:id/delete') do
+  db = grab_db()
+  p db.execute("DELETE FROM suppliers WHERE id = ?", params["id"])
+  return "OK"
 end
 
 ##################################################################################################################################
@@ -139,8 +152,6 @@ end
 product_auth_exceptions = ['showcase_img']
 
 before("/products/*") do
-  p product_auth_exceptions
-  p request.path_info
   if product_auth_exceptions.any? { |s| request.path_info.include? s } then
     return
   end
