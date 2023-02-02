@@ -1,0 +1,28 @@
+script src="js/suppliers.js"
+h1 Our Suppliers!
+
+main#suppliers
+  center
+    table.container
+      tr
+        th
+          p Name
+        th
+          p Origin
+        - if user and user["admin"] then
+          th
+            p Action
+      - suppliers.each do |supplier|
+        tr
+          td
+            a href="/products?supplier=#{supplier['id']}" #{supplier["name"]}
+          td
+            p = supplier["origin"]
+          - if user and user["admin"] then
+            td
+              p onclick="javascript: remove(#{supplier['id']}, this)" style="color: red; font-weight: bold;" Remove
+
+- if user and user["admin"] then
+  form#add_supplier method="POST" action="/suppliers"
+    input type="text"  name="name" value="" placeholder="Supplier name"
+    input type="submit" value="Add supplier!"

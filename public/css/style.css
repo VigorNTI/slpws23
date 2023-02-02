@@ -133,3 +133,30 @@ body > h1 {
 	border: green;
 	margin-right: 5px;
 }
+
+/* Suppliers */
+
+#suppliers table, #suppliers th, #suppliers td {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+#suppliers th, #suppliers td {
+	padding: 10px;
+}
+#suppliers tr {
+	transition: background-color 0.3s;
+}
+#suppliers tr:nth-child(even) {
+	background-color: #d6eeee;
+}
+#suppliers tr:hover:not(:first-child) {
+	background-color: #b2b3c5;
+	cursor: pointer;
+}
+#suppliers tr:not(:first-child) p {
+	transition: transform 0.3s;
+}
+#suppliers tr:hover:not(:first-child) td:first-child p {
+	transform: scale(1.3);
+}
+

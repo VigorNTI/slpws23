@@ -1,5 +1,11 @@
 script src="js/products.js"
-h1 Our products!
+- if s_id then
+  - if suppliers[s_id] then
+    h1 Our products from #{suppliers[s_id]["name"]}
+  - else
+    h1 Our products from an unknown supplier
+- else
+  h1 Our products!
 
 main#products
   article.container
@@ -23,5 +29,8 @@ main#products
 
 - if user and user["admin"] then
   form#add_product method="POST" action="/products"
-    input type="text"  name="name" value="" placeholder="Product name"
+    input type="text" name="name" value="" placeholder="Product name"
+    - if s_id then
+      - if suppliers[s_id] then
+        input type="number" name="s_id" value="#{s_id}" hidden=true
     input type="submit" value="Add product!"

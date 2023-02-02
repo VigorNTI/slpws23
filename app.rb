@@ -126,9 +126,14 @@ end
 ##################################################################################################################################
 
 get("/products") do
+  if params['supplier']
+    s_id = params['supplier'].scan(/\d+/)[0].to_i
+    result = grab_db().execute("SELECT * FROM products WHERE supplier_id=?", s_id)
+  else
+    result = grab_db().execute("SELECT * FROM products")
+  end
   suppliers = by_key(grab_db().execute("SELECT * FROM suppliers"))
-  result = grab_db().execute("SELECT * FROM products")
-  slim(:"products/index", locals:{user:get_user(), products:result, suppliers:suppliers})
+  slim(:"products/index", locals:{user:get_user(), products:result, suppliers:suppliers, s_id:s_id})
 end
 
 before("/products/*") do
@@ -172,8 +177,13 @@ end
 post('/products') do
   check_admin();
   product_name = params["name"]
+  if params['s_id']
+    product_s_id = params['s_id'].scan(/\d+/)[0].to_i
+  else
+    product_s_id = 0
+  end
   db = grab_db()
-  db.execute("INSERT INTO products (name, supplier_id) VALUES (?,0)", product_name)
+  db.execute("INSERT INTO products (name, supplier_id) VALUES (?,?)", product_name, product_s_id)
   redirect("/products/#{db.last_insert_row_id}/edit")
 end
 
