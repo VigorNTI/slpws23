@@ -11,7 +11,7 @@ main#suppliers
           p Name
         th
           p Origin
-        - if user and user["admin"] then
+        - if is_admin() then
           th
             p Edit?
           th
@@ -24,13 +24,13 @@ main#suppliers
             a href="/products?supplier=#{supplier['id']}" #{supplier["name"]}
           td
             p = supplier["origin"]
-          - if user and user["admin"] then
+          - if is_admin() then
             td
               a href="/suppliers/#{supplier['id']}/edit" style="color: yellow; font-weight: bold; text-shadow: black 1px 0 10px;" Edit
             td
               p onclick="javascript: remove(#{supplier['id']}, this)" style="color: red; font-weight: bold;" Remove
 
-- if user and user["admin"] then
+- if is_admin() then
   form#add_supplier method="POST" action="/suppliers"
     input type="text"  name="name" value="" placeholder="Supplier name"
     input type="submit" value="Add supplier!"

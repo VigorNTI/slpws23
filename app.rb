@@ -94,9 +94,18 @@ def name_by_key(table)
   return hash
 end
 
+def is_admin()
+  user = get_user()
+  if user == nil or user["admin"] != 1 then
+    return false
+  end
+  return true
+end
+
+
 def check_admin()
   user = get_user()
-  if user == nil or !user["admin"] then
+  if !is_admin() then
     halt 401, {'Content-Type' => 'text/plain'}, 'You should not be here'
   end
 end
