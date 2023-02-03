@@ -1,4 +1,4 @@
-script src="js/products.js?v=1"
+script src="js/products.js?v=2"
 - if s_id then
   - if suppliers[s_id] then
     h1 Our products from #{suppliers[s_id]["name"]}
@@ -27,7 +27,7 @@ main#products
         span.buy
           - if user and user["admin"] then
             a.edit href="/products/#{product['id']}/edit" Edit
-          a.buy Add to cart
+          a.buy onclick="javascript: shoppingcart_add(#{product['id']});" Add to cart
 
 - if user and user["admin"] then
   form#add_product method="POST" action="/products"

@@ -213,3 +213,68 @@ body > h1 {
 	border: green;
 	margin-right: 5px;
 }
+
+/* Shoppingcart */
+
+#shoppingcart th, #shoppingcart td {
+	border: 1px solid black;
+	border-style: solid none solid none;
+	border-collapse: collapse;
+}
+#shoppingcart table {
+	border-collapse: collapse;
+}
+#shoppingcart th, #shoppingcart td {
+	padding: 10px;
+}
+#shoppingcart tr {
+	transition: background-color 0.3s;
+}
+#shoppingcart tr:nth-child(even) {
+	background-color: #eee;
+}
+#shoppingcart tr:hover:not(:first-child) {
+	background-color: #b2b3c5;
+	cursor: pointer;
+}
+#shoppingcart img {
+	max-height: 50px;
+	max-width: 100px;
+}
+#shoppingcart td.info > span {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	justify-content: center;
+}
+#shoppingcart td.info > span > * {
+	margin: 0;
+}
+#shoppingcart td.amount > span {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+#shoppingcart td.amount > span > * {
+	margin-left: 15px;
+}
+#shoppingcart td.amount > span > *:first-child {
+	margin-left: 50px;
+}
+#shoppingcart td img {
+	max-height: 25px;
+	max-width: 25px;
+	cursor: pointer;
+}
+#shoppingcart td.delete img {
+	margin-left: 50px;
+}
+#shoppingcart figure {
+	margin: 0;
+	height: 50px;
+	width: 100px;
+	background-size: cover;
+	background-position: 50%;
+	background-repeat: no-repeat;
+}

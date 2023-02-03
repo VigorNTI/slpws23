@@ -26,3 +26,30 @@ function remove(id, btn)
 
 	xhr.send(params);
 }
+
+function shoppingcart_add(id)
+{
+	var url = "/shoppingcart";
+	var params = "product_id=" + id;
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", url, true);
+
+	//Send the proper header information along with the request
+	xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+	xhr.onreadystatechange = () => {
+		if (xhr.readyState === 4)
+		{
+			if (xhr.response == "OK")
+			{
+				alert("Item added to your shoppingcart!");
+			}
+			else if (xhr.response == "EXISTS")
+			{
+				alert("Item is already in your shoppingcart!");
+			}
+		}
+	}
+
+	xhr.send(params);
+}
