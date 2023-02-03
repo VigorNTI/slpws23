@@ -2,7 +2,8 @@ script src="js/shoppingcart.js?v=1"
 h1 Hello #{user["username"]}, here is your Shoppingcart!
 main#shoppingcart
   center
-    table
+
+    table#shoppingcart_table
       - products.each_value do |product|
         tr
           td.img
@@ -21,3 +22,5 @@ main#shoppingcart
               img onclick="javascript: change_amount(#{product["id"]}, 'ADD', this)" src="img/add.svg"
           td.delete
             img onclick="javascript: remove(#{product["id"]}, this)" src="/img/delete.svg"
+    form method="POST" action="/checkout"
+      input#checkout type="submit" value="Checkout!"

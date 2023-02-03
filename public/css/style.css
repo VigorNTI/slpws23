@@ -278,3 +278,13 @@ body > h1 {
 	background-position: 50%;
 	background-repeat: no-repeat;
 }
+#checkout {
+	margin-top: 20px;
+	width: 100px;
+	height: 30px;
+	background: green;
+	color: white;
+	border: 1px solid grey;
+	border-radius: 10px;
+	cursor: pointer;
+}
