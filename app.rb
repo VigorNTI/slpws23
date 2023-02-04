@@ -94,6 +94,14 @@ def name_by_key(table)
   return hash
 end
 
+def by_field(table, field)
+  hash = {}
+  for row in table do
+    hash[row[field]] = row
+  end
+  return hash
+end
+
 def is_admin()
   user = get_user()
   if user == nil or user["admin"] != 1 then
@@ -109,6 +117,75 @@ def check_admin()
     halt 401, {'Content-Type' => 'text/plain'}, 'You should not be here'
   end
 end
+
+###################################################################################################################################
+##########################################################   ORDERS   #############################################################
+###################################################################################################################################
+
+before("/orders") do
+  if !get_user() then
+    redirect('/')
+  end
+end
+
+get('/orders') do
+  uid = session[:id].to_i
+  db = grab_db()
+
+  # Grab orders
+  orders_payed = by_key(db.execute("SELECT * FROM orders WHERE user_id=? AND payed=1", uid))
+  orders_notpayed = by_key(db.execute("SELECT * FROM orders WHERE user_id=? AND payed=0", uid))
+  orders = {payed:orders_payed, notpayed:orders_notpayed}
+
+  # Grab the order ids
+  orders_ids = []
+  orders.each_value do |sub_orders|
+    sub_orders.each_key do |id|
+      orders_ids.append id
+    end
+  end
+  
+  # Grab the order product linkers
+  orders_products = db.execute("SELECT * FROM orders_products WHERE order_id IN(#{orders_ids.join(",")})")
+
+  products_ids = []
+  orders_products.each do |order_product|
+    p_id = order_product["product_id"]
+    if !products_ids.include? p_id then
+      products_ids.append p_id
+    end
+  end
+
+  # Grab the products used for all the orders
+  products = by_key(db.execute("SELECT * FROM products WHERE id IN(#{products_ids.join(",")})"))
+
+  # Final part, link them together
+  # we iterate over the linker table, orders_products, and link orders with products
+  orders_products.each do |order_product|
+    p_id = order_product["product_id"]
+    o_id = order_product["order_id"]
+    new_product = {id:p_id, amount:order_product["amount"]}
+    # Find the right order
+    if orders[:payed][o_id] then
+      order = orders[:payed][o_id]      
+    elsif orders[:notpayed][o_id] then
+      order = orders[:notpayed][o_id]
+    else
+      order = nil
+    end
+    # Add product to order
+    if order then
+      # Create an array inside the order hash
+      if !order[:products] then
+        order.merge!({products:[]})
+      end
+      # Add the product to the array inside the order hash
+      order[:products].append new_product
+    end
+  end
+  slim(:"orders/index", locals:{user:get_user(), orders:orders, products:products})
+end
+
 ###################################################################################################################################
 #########################################################   CHECKOUT   ############################################################
 ###################################################################################################################################
@@ -127,7 +204,7 @@ post("/checkout") do
     db.execute("INSERT INTO orders (user_id,date) VALUES (?,?)", uid, Time.now.to_i * 1000)
     order_id = db.last_insert_row_id
     shoppingcart.each do |item|
-      db.execute("INSERT INTO order_products (order_id, product_id, amount) VALUES (?,?,?)", order_id, item["product_id"], item["amount"]);
+      db.execute("INSERT INTO orders_products (order_id, product_id, amount) VALUES (?,?,?)", order_id, item["product_id"], item["amount"]);
       db.execute("DELETE FROM shoppingcart WHERE user_id=? AND product_id=?", uid, item["product_id"])
     end
   end
