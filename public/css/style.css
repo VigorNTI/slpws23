@@ -325,10 +325,11 @@ span.order > span.left {
 }
 span.order > span.left > * {
 	padding-right: 10px;
-	border: 2px dotted black;
-	border-style: none dotted dotted none;
+	border: 2px solid black;
+	border-style: none solid none none;
 }
 span.order > span.left > form.pay {
+	border-style: solid solid none none;
 	padding: 10px;
 }
 span.order > table {
