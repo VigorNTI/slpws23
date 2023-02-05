@@ -288,3 +288,60 @@ body > h1 {
 	border-radius: 10px;
 	cursor: pointer;
 }
+
+/* Orders */
+#orders > center {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+h2.payment_pending {
+	color: red;
+}
+h2.payment_completed {
+	color: green;
+}
+#orders_notpayed {
+	border: thick solid red;
+	padding: 20px;
+}
+span.sub_orders {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+span.order {
+	display: flex;
+	flex-direction: row;
+	align-items: start;
+}
+span.order:not(:last-child) {
+	border: thick double black;
+	border-style: none none double none;
+}
+span.order > span.left {
+	display: flex;
+	flex-direction: column;
+}
+span.order > span.left > * {
+	padding-right: 10px;
+	border: 2px dotted black;
+	border-style: none dotted dotted none;
+}
+span.order > span.left > form.pay {
+	padding: 10px;
+}
+span.order > table {
+	width: 400px;
+	border-collapse: collapse;
+}
+span.order > table td.amount {
+	text-align: right;
+	width: 100px;
+	padding-right: 10px;
+}
+span.order > table td.name {
+	padding-left: 10px;
+	border: 1px solid black;
+	border-style: none none none dashed;
+}
