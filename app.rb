@@ -333,7 +333,7 @@ end
 
 post('/suppliers/:id/delete') do
   db = grab_db()
-  p db.execute("DELETE FROM suppliers WHERE id = ?", params["id"])
+  db.execute("DELETE FROM suppliers WHERE id = ?", params["id"])
   return "OK"
 end
 
@@ -448,6 +448,6 @@ end
 
 post('/products/:id/delete') do
   db = grab_db()
-  p db.execute("DELETE FROM products WHERE id = ?", params["id"])
+  db.execute("DELETE FROM products WHERE id = ?", params["id"])
   return "OK"
 end

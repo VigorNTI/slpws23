@@ -12,7 +12,6 @@ main#orders
             span.order
               span.left
                 span.time
-                  - p order
                   h3 #{Time.at(order["date"]).strftime("%d/%m/%Y")}
                   h3 #{Time.at(order["date"]).strftime("%H:%M")}
                 form.pay method="POST" action="/orders/#{order["id"]}/pay"
