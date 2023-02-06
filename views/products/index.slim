@@ -27,7 +27,8 @@ main#products
         span.buy
           - if is_admin() then
             a.edit href="/products/#{product['id']}/edit" Edit
-          a.buy onclick="javascript: shoppingcart_add(#{product['id']});" Add to cart
+          - if get_user() then
+            a.buy onclick="javascript: shoppingcart_add(#{product['id']});" Add to cart
 
 - if is_admin() then
   form#add_product method="POST" action="/products"

@@ -226,7 +226,7 @@ end
 
 before("/shoppingcart") do
   if !get_user() then
-    redirect('/')
+    redirect('/login')
   end
 end
 
