@@ -6,6 +6,9 @@ require 'bcrypt'
 
 enable :sessions
 
+max_login_attempts = 3
+cooldown_s = 10
+
 def grab_db()
   db = SQLite3::Database.new("db/userbase.db")
   db.results_as_hash = true
@@ -56,27 +59,43 @@ get('/logout') do
 end
 
 post('/login') do
-  username = params[:username]
-  password = params[:password]
-  puts("Login attempt for #{username}")
-  
-  # Match user pwd_digest
-  password_digest = BCrypt::Password.create(password)
-  db = grab_db()
-  result = db.execute("SELECT * FROM users WHERE username = ?", username).first
-  if result == nil then
-    return "Username or password did not match"
-  end
-  pwdigest = result["pwdigest"]
-  id = result["id"]
-
-  if BCrypt::Password.new(pwdigest) == password
-    puts("Positive password match for #{username}, logging in...")
-    session[:id] = id
-    redirect("/")
+  if (Time.now.to_f * 1000).to_i < session["last_login_attempt"] + cooldown_s * 1000 then
+    p "Time left: #{session['last_login_attempt'] + cooldown_s * 1000 - (Time.now.to_f * 1000).to_i}"
   else
-    redirect("/login?state=badlogin")
+    session["login_attempts"] = 0
   end
+
+  if session["login_attempts"] != nil && session["login_attempts"] < max_login_attempts then
+    session["last_login_attempt"] = (Time.now.to_f * 1000).to_i
+    username = params[:username]
+    password = params[:password]
+    puts("Login attempt for #{username}")
+    
+    # Match user pwd_digest
+    password_digest = BCrypt::Password.create(password)
+    db = grab_db()
+    result = db.execute("SELECT * FROM users WHERE username = ?", username).first
+    if result != nil then
+      pwdigest = result["pwdigest"]
+      id = result["id"]
+
+      if BCrypt::Password.new(pwdigest) == password
+        puts("Positive password match for #{username}, logging in...")
+        session[:id] = id
+        session["login_attempts"] = 0
+        redirect("/")
+      end
+    end
+    if session["login_attempts"] == nil then
+      session["login_attempts"] = 1
+    else
+      session["login_attempts"] += 1
+    end
+    if session["login_attempts"] < max_login_attempts then
+      redirect("/login?state=badlogin")
+    end
+  end
+  redirect("/login?state=cooldown")
 end
 
 def by_key(table)
