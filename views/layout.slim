@@ -14,6 +14,8 @@ html lang="en"
 	      a href="/login" Login
       - else
 	      a href="/shoppingcart" Shoppingcart
+	      - if get_user()["admin"] > 0 then
+	            a href="/users" Users
 	      a href="/orders" Orders
 	      a href="/logout" Logout
       

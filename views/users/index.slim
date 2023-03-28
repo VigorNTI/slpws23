@@ -1,0 +1,31 @@
+script src="js/users.js?v=4"
+h1 Registered users:
+
+main#products
+  center
+    table.container
+      tr
+        th
+          p ID
+        th
+          p Name
+        th
+          p Authority level
+        th
+        th
+      - users.each do |e|
+        tr id="id#{e['id']}"
+          td
+            p = e["id"]
+          td
+            input name="name" type="text" value="#{e['username']}"
+          td
+            input name="admin_level" list="admin_levels" type="number" value="#{e['admin']}"
+            datalist#admin_levels
+              option value="#{0}" Normal
+              option value="#{1}" Admin
+              option value="#{2}" Super admin
+          td
+            p onclick="javascript: remove(#{e['id']}, this)" style="cursor: pointer; color: red; font-weight: bold;" Remove
+          td
+            p onclick="javascript: update(#{e['id']}, this)" style="cursor: pointer; font-weight: bold;" Save

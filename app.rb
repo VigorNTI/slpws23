@@ -47,7 +47,7 @@ get('/login') do
     redirect('/')
     return
   end
-  slim(:login, locals:{user:get_user()})
+  slim(:login, locals:{user:get_user(), state:params[:state]})
 end
 
 get('/logout') do
@@ -58,6 +58,7 @@ end
 post('/login') do
   username = params[:username]
   password = params[:password]
+  puts("Login attempt for #{username}")
   
   # Match user pwd_digest
   password_digest = BCrypt::Password.create(password)
@@ -70,11 +71,11 @@ post('/login') do
   id = result["id"]
 
   if BCrypt::Password.new(pwdigest) == password
+    puts("Positive password match for #{username}, logging in...")
     session[:id] = id
     redirect("/")
   else
-    return BCrypt::Password.new(pwdigest)
-    "Wrong password"
+    redirect("/login?state=badlogin")
   end
 end
 
@@ -104,12 +105,11 @@ end
 
 def is_admin()
   user = get_user()
-  if user == nil or user["admin"] != 1 then
+  if user == nil or user["admin"] < 1 then
     return false
   end
   return true
 end
-
 
 def check_admin()
   user = get_user()
@@ -121,4 +121,6 @@ end
 require_relative 'routes/products.rb'
 require_relative 'routes/suppliers.rb'
 require_relative 'routes/shoppingcart.rb'
+require_relative 'routes/checkout.rb'
 require_relative 'routes/orders.rb'
+require_relative 'routes/users.rb'
