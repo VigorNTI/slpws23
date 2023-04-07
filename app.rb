@@ -3,22 +3,19 @@ require 'sinatra/reloader'
 require 'slim'
 require 'sqlite3'
 require 'bcrypt'
+require_relative 'model.rb'
 
 enable :sessions
 
 max_login_attempts = 3
 cooldown_s = 10
 
-def grab_db()
-  db = SQLite3::Database.new("db/userbase.db")
-  db.results_as_hash = true
-  return db
+def get_user()
+  return get_user_db(session[:id])
 end
 
-def get_user()
-  uid = session[:id].to_i
-  db = grab_db()
-  return db.execute("SELECT * FROM users WHERE id = ?", uid).first
+def is_admin()
+  return is_admin_db(session[:id])
 end
 
 get('/') do
@@ -26,7 +23,7 @@ get('/') do
 end
 
 get('/register') do
-  slim(:register, locals:{user:get_user()})
+  slim(:register, locals:{user:get_user(session)})
 end 
 
 post('/users/new') do
@@ -37,12 +34,12 @@ post('/users/new') do
   if (password != password_confirm)
     return "Lösenorden matchade inte"
   end
-  
-  # Add user
-  password_digest = BCrypt::Password.create(password)
-  db = grab_db()
-  db.execute("INSERT INTO users (username, pwdigest, admin) VALUES (?,?,0)", username, password_digest)
-  redirect("/")
+
+  if register_user(username, password, password_confirm) == true then
+    redirect("/")
+  else
+    redirect("/e")
+  end
 end
 
 get('/login') do
@@ -59,7 +56,7 @@ get('/logout') do
 end
 
 post('/login') do
-  if (Time.now.to_f * 1000).to_i < session["last_login_attempt"] + cooldown_s * 1000 then
+  if session["last_login_attempt"] && (Time.now.to_f * 1000).to_i < session["last_login_attempt"] + cooldown_s * 1000 then
     p "Time left: #{session['last_login_attempt'] + cooldown_s * 1000 - (Time.now.to_f * 1000).to_i}"
   else
     session["login_attempts"] = 0
@@ -71,20 +68,11 @@ post('/login') do
     password = params[:password]
     puts("Login attempt for #{username}")
     
-    # Match user pwd_digest
-    password_digest = BCrypt::Password.create(password)
-    db = grab_db()
-    result = db.execute("SELECT * FROM users WHERE username = ?", username).first
-    if result != nil then
-      pwdigest = result["pwdigest"]
-      id = result["id"]
-
-      if BCrypt::Password.new(pwdigest) == password
-        puts("Positive password match for #{username}, logging in...")
-        session[:id] = id
-        session["login_attempts"] = 0
-        redirect("/")
-      end
+    id = login(username, password)
+    if id != false then
+      session[:id] = id
+      session["login_attempts"] = 0
+      redirect("/")
     end
     if session["login_attempts"] == nil then
       session["login_attempts"] = 1
@@ -98,40 +86,7 @@ post('/login') do
   redirect("/login?state=cooldown")
 end
 
-def by_key(table)
-  hash = {}
-  for row in table do
-    hash[row["id"]] = row
-  end
-  return hash
-end
-
-def name_by_key(table)
-  hash = {}
-  for row in table do
-    hash[row["id"]] = row["name"]
-  end
-  return hash
-end
-
-def by_field(table, field)
-  hash = {}
-  for row in table do
-    hash[row[field]] = row
-  end
-  return hash
-end
-
-def is_admin()
-  user = get_user()
-  if user == nil or user["admin"] < 1 then
-    return false
-  end
-  return true
-end
-
 def check_admin()
-  user = get_user()
   if !is_admin() then
     halt 401, {'Content-Type' => 'text/plain'}, 'You should not be here'
   end

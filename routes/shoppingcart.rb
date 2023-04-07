@@ -5,13 +5,12 @@ before("/shoppingcart") do
 end
 
 get('/shoppingcart') do
-  db = grab_db()
   product_ids = []
-  cart = db.execute("SELECT product_id,amount FROM shoppingcart WHERE user_id=?", get_user()["id"]);
+  cart = get_shoppingcart_items(get_user()["id"]);
   cart.each do |item|
     product_ids.append item["product_id"]
   end
-  products = db.execute("SELECT id,name,supplier_id FROM products WHERE id IN(#{product_ids.join(",")})")
+  products = get_products_by_ids(product_ids)
   products_keys = by_key(products)
   cart.each do |item|
     products_keys[item["product_id"]].merge!({amount:item["amount"]})
@@ -23,7 +22,7 @@ get('/shoppingcart') do
       supplier_ids.append product["supplier_id"]
     end
   end
-  suppliers = db.execute("SELECT id,name,origin FROM suppliers WHERE id IN(#{supplier_ids.join(",")})")
+  suppliers = get_suppliers_by_ids(supplier_ids)
 
   slim(:"shoppingcart/index", locals:{user:get_user(), products:products_keys, suppliers:by_key(suppliers)})
 end
@@ -31,13 +30,7 @@ end
 post("/shoppingcart") do
   uid = session[:id].to_i
   p_id = params["product_id"]
-  db = grab_db()
-  result = db.execute("SELECT * FROM shoppingcart WHERE user_id=? AND product_id=?", uid, p_id)
-  if result.length > 0 then
-    db.execute("UPDATE shoppingcart SET amount = ? WHERE user_id=? AND product_id=?", result[0]["amount"] + 1, uid, p_id)
-  else
-    db.execute("INSERT INTO shoppingcart (user_id,product_id) VALUES (?,?)", uid, p_id)
-  end
+  create_shoppingcart_item(uid, p_id)
   return "OK"
 end
 
@@ -48,8 +41,7 @@ post('/shoppingcart/:id/update') do
 
   value_action = -1
 
-  db = grab_db()
-  result = db.execute("SELECT * FROM shoppingcart WHERE user_id=? AND product_id=?", uid, p_id)
+  result = get_specific_shoppingcart_items(uid, p_id)
   if result.length > 0 then
     if pol == "DEC" then
       value_action = -1
@@ -59,10 +51,10 @@ post('/shoppingcart/:id/update') do
       return "NOK"
     end
     if result[0]["amount"] + value_action <= 0 then
-      db.execute("DELETE FROM shoppingcart WHERE user_id=? AND product_id=?", uid, p_id)
+      delete_shoppingcart_item(uid, p_id)
       return "DEL"
     end
-    db.execute("UPDATE shoppingcart SET amount = ? WHERE user_id=? AND product_id=?", result[0]["amount"] + value_action, uid, p_id)
+    update_shoppingcart_item(result[0]["amount"] + value_action, uid, p_id)
     return pol
   end
   return "DEL"
@@ -73,7 +65,6 @@ post('/shoppingcart/:id/delete') do
   uid = session[:id].to_i
   p_id = params["id"]
 
-  db = grab_db()
-  db.execute("DELETE FROM shoppingcart WHERE user_id=? AND product_id=?", uid, p_id)
+  delete_shoppingcart_item(uid, p_id)
   return "DEL"
 end
