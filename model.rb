@@ -71,8 +71,7 @@ def get_product(p_id)
 end
 
 def get_products_by_ids(ids)
-  # TODO: Try to change it to `?`
-  return connect_db().execute("SELECT id,name,supplier_id FROM products WHERE id IN(#{ids.join(",")})") # SQL injection is not an issue, `ids` should not be gotten from a user
+  return connect_db().execute("SELECT id,name,supplier_id FROM products WHERE id IN(?)", ids.join(","))
 end
 
 def bykey_get_products_by_ids(ids)
@@ -112,8 +111,7 @@ def get_suppliers()
 end
 
 def get_suppliers_by_ids(ids)
-  # TODO: Try to change it to `?`
-  return connect_db().execute("SELECT id,name,origin FROM suppliers WHERE id IN(#{ids.join(",")})")
+  return connect_db().execute("SELECT id,name,origin FROM suppliers WHERE id IN(?)", ids.join(","))
 end
 
 def get_supplier(id)
