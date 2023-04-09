@@ -6,25 +6,9 @@ end
 
 get('/shoppingcart') do
   product_ids = []
-  cart = get_shoppingcart_items(get_user()["id"]);
-  cart.each do |item|
-    product_ids.append item["product_id"]
-  end
-  products = get_products_by_ids(product_ids)
-  products_keys = by_key(products)
-  cart.each do |item|
-    products_keys[item["product_id"]].merge!({amount:item["amount"]})
-  end
-  
-  supplier_ids = []
-  products.each do |product|
-    if !supplier_ids.include? product["supplier_id"]
-      supplier_ids.append product["supplier_id"]
-    end
-  end
-  suppliers = get_suppliers_by_ids(supplier_ids)
+  products = get_shoppingcart_items_full(get_user()["id"]);
 
-  slim(:"shoppingcart/index", locals:{user:get_user(), products:products_keys, suppliers:by_key(suppliers)})
+  slim(:"shoppingcart/index", locals:{user:get_user(), products:products})
 end
 
 post("/shoppingcart") do

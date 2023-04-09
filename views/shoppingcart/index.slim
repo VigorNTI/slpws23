@@ -4,23 +4,31 @@ main#shoppingcart
   center
 
     table#shoppingcart_table
-      - products.each_value do |product|
-        tr
+      - cart_error = false
+      - products.each do |product|
+        - if product['visible'] == 0 || product['s_visible'] == 0 then
+          - cart_error = true
+        tr class="#{product['visible'] == 0 || product['s_visible'] == 0 ? 'error' : ''}"
           td.img
             img src="/products/#{product["id"]}/showcase_img"
           td.info
             span
               p #{product["name"]}
-              - if suppliers[product["supplier_id"]] then
-                b #{suppliers[product["supplier_id"]]["name"]}
-              - else
-                b Unknown
+              b #{product["supplier_name"]}
           td.amount
-            span
-              img onclick="javascript: change_amount(#{product["id"]}, 'DEC', this)" src="img/decrease.svg"
-              h3 #{product[:amount]}st
-              img onclick="javascript: change_amount(#{product["id"]}, 'ADD', this)" src="img/add.svg"
+            - if product["visible"] == 0 then
+              p Out of stock!
+            - elsif product["s_visible"] == 0 then
+              p Supplier is out of stock!
+            - else
+              span
+                img onclick="javascript: change_amount(#{product["id"]}, 'DEC', this)" src="img/decrease.svg"
+                h3 #{product["amount"]}st
+                img onclick="javascript: change_amount(#{product["id"]}, 'ADD', this)" src="img/add.svg"
           td.delete
             img onclick="javascript: remove(#{product["id"]}, this)" src="/img/delete.svg"
     form method="POST" action="/checkout"
-      input#checkout type="submit" value="Checkout!"
+      - if cart_error then
+        input#checkout type="submit" value="Checkout!" class="error" disabled="1"
+      - else
+        input#checkout type="submit" value="Checkout!"

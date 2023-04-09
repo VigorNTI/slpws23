@@ -8,7 +8,11 @@ before("/suppliers/*") do
 end
 
 get("/suppliers") do
-  result = get_suppliers()
+  if is_admin() then
+    result = get_suppliers()
+  else
+    result = get_valid_suppliers()
+  end
   slim(:"suppliers/index", locals:{user:get_user(), suppliers:result})
 end
 
@@ -21,7 +25,7 @@ post("/suppliers") do
 end
 
 post('/suppliers/:id/delete') do
-  delete_supplier(params["id"])
+  hide_supplier(params["id"])
   return "OK"
 end
 
@@ -36,12 +40,16 @@ post('/suppliers/:id/update') do
   supplier_id = params[:id]
   supplier_name = params["name"]
   supplier_origin = params["origin"]
+  supplier_visible = 0
+  if params["visibility"] and params["visibility"] == "visible" then
+    supplier_visible = 1
+  end
 
   if params["picture"] then
     pic_tempfile = params["picture"]["tempfile"]
-    update_supplier_all(supplier_name, supplier_origin, pic_tempfile.read(), supplier_id)
+    update_supplier_all(supplier_name, supplier_origin, supplier_visible, pic_tempfile.read(), supplier_id)
   else
-    update_supplier(supplier_name, supplier_origin, supplier_id)
+    update_supplier(supplier_name, supplier_origin, supplier_visible, supplier_id)
   end
   redirect('/suppliers')
 end

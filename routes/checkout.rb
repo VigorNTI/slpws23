@@ -6,8 +6,11 @@ end
 
 post("/checkout") do
   uid = session[:id].to_i
-  create_order(uid)
-  redirect('/products')
+  if create_order(uid) >= 0 then
+    redirect('/products')
+  else
+    redirect('/shoppingcart')
+  end
 end
 
 

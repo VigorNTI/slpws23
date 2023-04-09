@@ -63,15 +63,23 @@ end
 # Products
 
 def get_products()
-  return connect_db().execute("SELECT * FROM products")
+  return connect_db().execute("SELECT products.*, suppliers.visible as s_visible FROM products INNER JOIN suppliers ON products.supplier_id = suppliers.id")
+end
+
+def get_valid_products()
+  return connect_db().execute("SELECT products.*, suppliers.visible as s_visible FROM products INNER JOIN suppliers ON products.supplier_id = suppliers.id WHERE products.visible=1 AND suppliers.visible=1")
+end
+
+def get_products_linked_orders(uid)
+  return connect_db().execute("SELECT products.* FROM ((products INNER JOIN orders_products ON products.id=orders_products.product_id) INNER JOIN orders ON orders_products.order_id=orders.id) WHERE orders.user_id=?", uid)
 end
 
 def get_product(p_id)
-  return connect_db().execute("SELECT * FROM products WHERE id=?", p_id).first
+  return connect_db().execute("SELECT products.*, suppliers.visible as s_visible FROM products INNER JOIN suppliers ON products.supplier_id = suppliers.id WHERE products.id=?", p_id).first
 end
 
 def get_products_by_ids(ids)
-  return connect_db().execute("SELECT id,name,supplier_id FROM products WHERE id IN(?)", ids.join(","))
+  return connect_db().execute("SELECT products.*, suppliers.visible as s_visible FROM products INNER JOIN suppliers ON products.supplier_id = suppliers.id WHERE products.id IN(?)", ids.join(","))
 end
 
 def bykey_get_products_by_ids(ids)
@@ -79,7 +87,11 @@ def bykey_get_products_by_ids(ids)
 end
 
 def get_products_by_supplier(s_id)
-  return connect_db().execute("SELECT * FROM products WHERE supplier_id=?", s_id).first
+  return connect_db().execute("SELECT products.*, suppliers.visible as s_visible FROM products INNER JOIN suppliers ON products.supplier_id = suppliers.id WHERE products.supplier_id=?", s_id)
+end
+
+def get_valid_products_by_supplier(s_id)
+  return connect_db().execute("SELECT products.*, suppliers.visible as s_visible FROM products INNER JOIN suppliers ON products.supplier_id = suppliers.id WHERE products.supplier_id=? AND products.visible=1 AND suppliers.id=1", s_id)
 end
 
 def get_product_img(id)
@@ -92,22 +104,38 @@ def create_product(name, s_id)
   return db.last_insert_row_id
 end
 
-def delete_product(id)
-  return connect_db().execute("DELETE FROM products WHERE id = ?", id)
+def unhide_product(id)
+  return connect_db().execute("UPDATE products SET visible=1 WHERE id=?", id)
 end
 
-def update_product(name, s_id, p_id)
-    return connect_db().execute("UPDATE products SET name = ?, supplier_id = ? WHERE id = ?", name, s_id, p_id)
+def hide_product(id)
+  # This breaks the logic, a deleted product will be a missing product on a order, which means a missing part on a receipt
+  #return connect_db().execute("DELETE FROM products WHERE id = ?", id)
+
+  # We use the flag instead
+  return connect_db().execute("UPDATE products SET visible=0 WHERE id=?", id)
 end
 
-def update_product_all(name, s_id, img, p_id)
-    return connect_db().execute("UPDATE products SET name = ?, supplier_id = ?, showcase_img = ? WHERE id = ?", name, s_id, SQLite3::Blob.new(img), p_id)
+def update_product(name, s_id, visible, p_id)
+    return connect_db().execute("UPDATE products SET name = ?, supplier_id = ?, visible = ? WHERE id = ?", name, s_id, visible, p_id)
+end
+
+def update_product_all(name, s_id, visible, img, p_id)
+    return connect_db().execute("UPDATE products SET name = ?, supplier_id = ?, visible = ?, showcase_img = ? WHERE id = ?", name, s_id, visible, SQLite3::Blob.new(img), p_id)
 end
 
 # Suppliers
 
 def get_suppliers()
   return connect_db().execute("SELECT * FROM suppliers")
+end
+
+def namebykey_get_suppliers()
+  return name_by_key(connect_db().execute("SELECT * FROM suppliers"))
+end
+
+def get_valid_suppliers()
+  return connect_db().execute("SELECT * FROM suppliers WHERE visible=1")
 end
 
 def get_suppliers_by_ids(ids)
@@ -122,12 +150,12 @@ def get_supplier_img(id)
   return StringIO.new(connect_db().execute("SELECT showcase_img FROM suppliers WHERE id=?", id).first["showcase_img"]).read
 end
 
-def update_supplier_all(name, origin, img, id)
-    return connect_db().execute("UPDATE suppliers SET name = ?, origin = ?, showcase_img = ? WHERE id = ?", name, origin, SQLite3::Blob.new(img), id)
+def update_supplier_all(name, origin, visible, img, id)
+    return connect_db().execute("UPDATE suppliers SET name = ?, origin = ?, visible = ?, showcase_img = ? WHERE id = ?", name, origin, visible, SQLite3::Blob.new(img), id)
 end
 
-def update_supplier(name, origin, id)
-    return connect_db().execute("UPDATE suppliers SET name = ?, origin = ? WHERE id = ?", name, origin, id)
+def update_supplier(name, origin, visible, id)
+    return connect_db().execute("UPDATE suppliers SET name = ?, origin = ?, visible = ? WHERE id = ?", name, origin, visible, id)
 end
 
 def create_supplier(name)
@@ -136,8 +164,12 @@ def create_supplier(name)
   return db.last_insert_row_id
 end
 
-def delete_supplier(id)
-  return connect_db().execute("DELETE FROM suppliers WHERE id = ?", params["id"])
+def unhide_supplier(id)
+  return connect_db().execute("UPDATE suppliers SET visible=1 WHERE id=?", id)
+end
+
+def hide_supplier(id)
+  return connect_db().execute("UPDATE suppliers SET visible=0 WHERE id=?", id)
 end
 
 def get_supplier_by_name(name)
@@ -186,10 +218,17 @@ def create_shoppingcart_item(uid, p_id)
   end
 end
 
+def get_shoppingcart_invalid_items(uid)
+  return connect_db().execute("SELECT shoppingcart.*,products.visible,suppliers.visible as s_visible FROM ((shoppingcart INNER JOIN products ON shoppingcart.product_id=products.id) INNER JOIN suppliers ON products.supplier_id=suppliers.id) WHERE shoppingcart.user_id=? AND (products.visible=0 OR suppliers.visible=0)", uid)
+end
+
 # Orders
 
 def create_order(uid)
   db = connect_db()
+  if get_shoppingcart_invalid_items(uid).length > 0 then
+    return -1
+  end
   shoppingcart = get_shoppingcart_items(uid)
   if shoppingcart.length > 0 then
     db.execute("INSERT INTO orders (user_id,date) VALUES (?,?)", uid, Time.now.to_i * 1000)
@@ -200,7 +239,7 @@ def create_order(uid)
     end
     return db.last_insert_row_id
   end
-  return false
+  return -1
 end
 
 def bykey_get_orders_payed(uid)
@@ -211,62 +250,47 @@ def bykey_get_orders_notpayed(uid)
   return by_key(connect_db().execute("SELECT * FROM orders WHERE user_id=? AND payed=0", uid))
 end
 
+def get_orders_payed_full(uid)
+  return connect_db().execute("SELECT orders.*,orders_products.product_id,orders_products.amount FROM orders INNER JOIN orders_products ON orders.id=orders_products.order_id WHERE user_id=? AND payed=1", uid)
+end
+
+def get_orders_notpayed_full(uid)
+  return connect_db().execute("SELECT orders.*,orders_products.product_id,orders_products.amount FROM orders INNER JOIN orders_products ON orders.id=orders_products.order_id WHERE user_id=? AND payed=0", uid)
+end
+
 def get_orders_products_by_ids(ids)
   return connect_db().execute("SELECT * FROM orders_products WHERE order_id IN(#{ids.join(",")})")
 end
 
 def get_orders_struct(uid)
-  # Grab orders
   orders_payed = bykey_get_orders_payed(uid)
   orders_notpayed = bykey_get_orders_notpayed(uid)
   orders = {payed:orders_payed, notpayed:orders_notpayed}
 
-  # Grab the order ids
-  orders_ids = []
-  orders.each_value do |sub_orders|
-    sub_orders.each_key do |id|
-      orders_ids.append id
-    end
-  end
-  
-  # Grab the order product linkers
-  orders_products = get_orders_products_by_ids(orders_ids)
-
-  products_ids = []
-  orders_products.each do |order_product|
-    p_id = order_product["product_id"]
-    if !products_ids.include? p_id then
-      products_ids.append p_id
-    end
-  end
-
-  # Grab the products used for all the orders
-  products = bykey_get_products_by_ids(products_ids)
-
-  # Final part, link them together
-  # we iterate over the linker table, orders_products, and link orders with products
-  orders_products.each do |order_product|
-    p_id = order_product["product_id"]
-    o_id = order_product["order_id"]
-    new_product = {id:p_id, amount:order_product["amount"]}
-    # Find the right order
-    if orders[:payed][o_id] then
-      order = orders[:payed][o_id]      
-    elsif orders[:notpayed][o_id] then
-      order = orders[:notpayed][o_id]
-    else
-      order = nil
-    end
-    # Add product to order
-    if order then
-      # Create an array inside the order hash
-      if !order[:products] then
-        order.merge!({products:[]})
+  # Add product linkers to orders
+  pf = get_orders_payed_full(uid)
+  if pf.length > 0 then
+    pf.each do |order|
+      if not orders_payed[order["id"]]["products"] then
+        orders_payed[order["id"]]["products"] = []
       end
-      # Add the product to the array inside the order hash
-      order[:products].append new_product
+      product = {id:order["product_id"],amount:order["amount"]}
+      orders_payed[order["id"]]["products"].append product
     end
   end
+  npf = get_orders_notpayed_full(uid)
+  if npf.length > 0 then
+    npf.each do |order|
+      if not orders_notpayed[order["id"]]["products"] then
+        orders_notpayed[order["id"]]["products"] = []
+      end
+      product = {id:order["product_id"],amount:order["amount"]}
+      orders_notpayed[order["id"]]["products"].append product
+    end
+  end
+
+  products = by_key(get_products_linked_orders(uid))
+
   return {orders:orders, products:products}
 end
 
@@ -290,4 +314,11 @@ end
 
 def update_user(uname, admin, id)
   return connect_db().execute("UPDATE users SET username=?,admin=? WHERE id = ?", uname, admin, id)
+end
+
+# Advanced querries
+
+# This function returns products that is included in the shoppingcart, the products include the amount tag and supplier fields
+def get_shoppingcart_items_full(uid)
+  return connect_db().execute("SELECT products.*,shoppingcart.amount,suppliers.name as supplier_name,suppliers.visible as s_visible FROM ((products INNER JOIN shoppingcart ON products.id=shoppingcart.product_id) INNER JOIN suppliers ON products.supplier_id=suppliers.id) WHERE shoppingcart.user_id=?", uid);
 end

@@ -2,7 +2,7 @@ function remove(id, btn)
 {
 	e = btn.parentElement.getElementsByClassName("name")[0].children[0];
 	e2= btn.parentElement.getElementsByClassName("supplier")[0].getElementsByTagName("p")[0];
-	if (!confirm("Are you sure you want to remove " + e.innerHTML + " by " + e2.innerHTML + "?"))
+	if (!confirm("Are you sure you want to hide " + e.innerHTML + " by " + e2.innerHTML + "?"))
 	{
 		return;
 	}
@@ -19,7 +19,8 @@ function remove(id, btn)
 		{
 			if (xhr.response == "OK")
 			{
-				btn.parentElement.remove();
+				btn.parentElement.classList.add("disabled");
+				btn.parentElement.querySelector(".buy .buy").remove()
 			}
 		}
 	}

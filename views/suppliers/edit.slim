@@ -16,4 +16,12 @@ center
           label for="supplier" Origin
         td
           input type="text" name="origin" value="#{supplier['origin']}"
+      tr
+        td
+          label for="visibility" Visibility
+        td
+          - if supplier["visible"] == 1 then
+            input type="checkbox" name="visibility" checked="true" value="visible"
+          - else
+            input type="checkbox" name="visibility" value="visible"
     input type="submit" value="Save"

@@ -1,9 +1,18 @@
 get("/products") do
-  if params['supplier']
-    s_id = params['supplier'].scan(/\d+/)[0].to_i
-    result = get_products_supplier(s_id)
+  if is_admin() then
+    if params['supplier']
+      s_id = params['supplier'].scan(/\d+/)[0].to_i
+      result = get_products_by_supplier(s_id)
+    else
+      result = get_products()
+    end
   else
-    result = get_products()
+    if params['supplier']
+      s_id = params['supplier'].scan(/\d+/)[0].to_i
+      result = get_valid_products_by_supplier(s_id)
+    else
+      result = get_valid_products()
+    end
   end
   suppliers = bykey_get_suppliers()
   slim(:"products/index", locals:{user:get_user(), products:result, suppliers:suppliers, s_id:s_id})
@@ -21,16 +30,21 @@ end
 get('/products/:id/edit') do
   user = get_user()
   product_id = params[:id]
-  product_data = get_product(product_id)
-  supplier_data = get_products_by_supplier(product_data["supplier_id"])
-  suppliers = get_suppliers()
-  slim(:'products/edit', locals:{user:user, product:product_data, supplier:supplier_data, suppliers:name_by_key(suppliers)})
+  product = get_product(product_id)
+  supplier = get_supplier(product["supplier_id"])
+  suppliers = namebykey_get_suppliers()
+  slim(:'products/edit', locals:{user:user, product:product, supplier:supplier, suppliers:suppliers})
 end
 
 post('/products/:id/update') do
   product_name = params["name"]
   supplier_name = params["supplier"]
   product_id = params[:id]
+  product_visible = 0
+  if params["visibility"] and params["visibility"] == "visible" then
+    product_visible = 1
+  end
+
 
   supplier = get_supplier_by_name(supplier_name)
   if !supplier then
@@ -40,9 +54,9 @@ post('/products/:id/update') do
   if params["picture"] then
     product_fn = params["picture"]["filename"]
     product_f  = params["picture"]["tempfile"]
-    update_product_all(product_name, supplier_id, product_f.read(), product_id)
+    update_product_all(product_name, supplier_id, product_visible, product_f.read(), product_id)
   else
-    update_product(product_name, supplier_id, product_id)
+    update_product(product_name, supplier_id, product_visible, product_id)
   end
   redirect('/')
 end
@@ -66,6 +80,6 @@ post('/products') do
 end
 
 post('/products/:id/delete') do
-  delete_product(params["id"])
+  hide_product(params["id"])
   return "OK"
 end

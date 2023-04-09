@@ -1,4 +1,4 @@
-script src="js/suppliers.js"
+script src="js/suppliers.js?v=1"
 h1 Our Suppliers!
 
 main#suppliers
@@ -15,9 +15,9 @@ main#suppliers
           th
             p Edit?
           th
-            p Remove?
+            p Visibility
       - suppliers.each do |supplier|
-        tr
+        tr class="#{supplier['visible'] == 1 ? '' : 'disabled'}"
           td
             figure style="background-image: url('/suppliers/#{supplier['id']}/showcase_img');"
           td
@@ -28,7 +28,7 @@ main#suppliers
             td
               a href="/suppliers/#{supplier['id']}/edit" style="color: yellow; font-weight: bold; text-shadow: black 1px 0 10px;" Edit
             td
-              p onclick="javascript: remove(#{supplier['id']}, this)" style="color: red; font-weight: bold;" Remove
+              p style="color: green; font-weight: bold;" #{(supplier["visible"] == 1 ? "Visible" : "Hidden for costomers")}
 
 - if is_admin() then
   form#add_supplier method="POST" action="/suppliers"

@@ -22,4 +22,13 @@ center
           datalist#suppliers
             - suppliers.each do |k,v|
               option value="#{v}" #{k}
+      tr
+        td
+          label for="visibility" Visibility
+        td
+          - if product["visible"] == 1 then
+            input type="checkbox" name="visibility" checked="true" value="visible"
+          - else
+            input type="checkbox" name="visibility" value="visible"
+
     input type="submit" value="Save"

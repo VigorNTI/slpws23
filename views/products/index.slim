@@ -1,4 +1,4 @@
-script src="js/products.js?v=2"
+script src="js/products.js?v=3"
 - if s_id then
   - if suppliers[s_id] then
     h1 Our products from #{suppliers[s_id]["name"]}
@@ -10,7 +10,7 @@ script src="js/products.js?v=2"
 main#products
   article.container
     - products.each do |product|
-      article style="border-style: solid; margin-bottom: 1rem; padding: 1rem;"
+      article style="border-style: solid; margin-bottom: 1rem; padding: 1rem;" class="#{(product['visible'] == 0 ? 'disabled' : '')} #{(product['s_visible'] == 0 ? 'locked' : '')}"
         - if is_admin() then
           img.remove src="/img/remove.svg" onclick="javascript: remove(#{product['id']}, this)"
         figure style="background-image: url('/products/#{product['id']}/showcase_img');"
@@ -27,7 +27,7 @@ main#products
         span.buy
           - if is_admin() then
             a.edit href="/products/#{product['id']}/edit" Edit
-          - if get_user() then
+          - if get_user() && product["visible"] == 1 && product["s_visible"] == 1 then
             a.buy onclick="javascript: shoppingcart_add(#{product['id']});" Add to cart
 
 - if is_admin() then
