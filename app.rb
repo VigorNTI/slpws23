@@ -3,29 +3,41 @@ require 'sinatra/reloader'
 require 'slim'
 require 'sqlite3'
 require 'bcrypt'
-require_relative 'model.rb'
+require_relative 'model/model.rb'
+include Model
 
 enable :sessions
 
 max_login_attempts = 3
 cooldown_s = 10
 
+# Get the user from the database, it passes the user id from the session automatically
+#
+# @return [Hash] the hash associated with a user from the database
 def get_user()
   return get_user_db(session[:id])
 end
 
+# Checks if the logged in user is admin or not
+#
+# @return [Boolean] true if the user is admin and false otherwise
 def is_admin()
   return is_admin_db(session[:id])
 end
 
+# Redirects the user to '/products'
 get('/') do
   redirect('/products')
 end
 
+# Displays a register form
 get('/register') do
   slim(:register, locals:{user:get_user(session)})
 end 
 
+# Creates a new user
+#
+# @see Model#register_user
 post('/users/new') do
   username = params[:username]
   password = params[:password]
@@ -42,6 +54,7 @@ post('/users/new') do
   end
 end
 
+# Displays a login form
 get('/login') do
   if get_user() != nil then
     redirect('/')
@@ -50,11 +63,15 @@ get('/login') do
   slim(:login, locals:{user:get_user(), state:params[:state]})
 end
 
+# Logs the user out
 get('/logout') do
   session[:id] = nil
   redirect('/')
 end
 
+# Logs the user in
+#
+# @see Model#login
 post('/login') do
   if session["last_login_attempt"] && (Time.now.to_f * 1000).to_i < session["last_login_attempt"] + cooldown_s * 1000 then
     p "Time left: #{session['last_login_attempt'] + cooldown_s * 1000 - (Time.now.to_f * 1000).to_i}"
@@ -69,7 +86,7 @@ post('/login') do
     puts("Login attempt for #{username}")
     
     id = login(username, password)
-    if id != false then
+    if id >= 0 then
       session[:id] = id
       session["login_attempts"] = 0
       redirect("/")
@@ -86,6 +103,7 @@ post('/login') do
   redirect("/login?state=cooldown")
 end
 
+# Check if the eventually logged in user is admin or not and halts sinatra if the user is not logged in or the user is not admin
 def check_admin()
   if !is_admin() then
     halt 401, {'Content-Type' => 'text/plain'}, 'You should not be here'
