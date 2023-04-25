@@ -22,7 +22,7 @@ end
 # Adds a new supplier from passed values
 post("/suppliers") do
   check_admin()
-  uid = session[id].to_i
+  uid = session[:id].to_i
   supplier_name = params["name"]
   create_supplier(supplier_name)
   redirect('/suppliers')
