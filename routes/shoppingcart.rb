@@ -1,9 +1,11 @@
+# Checks if user is logged in before accessing /shoppingcart* routes, redirects to /login otherwise
 before("/shoppingcart") do
   if !get_user() then
     redirect('/login')
   end
 end
 
+# Displays a page with shoppingcart items
 get('/shoppingcart') do
   product_ids = []
   products = get_shoppingcart_items_full(get_user()["id"]);
@@ -11,6 +13,7 @@ get('/shoppingcart') do
   slim(:"shoppingcart/index", locals:{user:get_user(), products:products})
 end
 
+# Adds a product as a shoppingcart item to the shoppingcart and returns "OK"
 post("/shoppingcart") do
   uid = session[:id].to_i
   p_id = params["product_id"]
@@ -18,6 +21,7 @@ post("/shoppingcart") do
   return "OK"
 end
 
+# Updates a specified shoppingcart item with a specied value and returns "DEC" if the amount value has been decremented, "ADD" if it has been incremented or "DEL" if it has been deleted (decremented to zero or below)
 post('/shoppingcart/:id/update') do
   uid = session[:id].to_i
   p_id = params["id"]
@@ -45,6 +49,7 @@ post('/shoppingcart/:id/update') do
 end
 
 
+# Deletes a specified shoppingcart item and returns "DEL"
 post('/shoppingcart/:id/delete') do
   uid = session[:id].to_i
   p_id = params["id"]

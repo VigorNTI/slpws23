@@ -1,2 +1,8 @@
 app.rb 3e5a1ca91a91255856b78f404e65ea51c7ae06c6
 model/model.rb 028743ccaf59f17d68e68e4100cce37709f66209
+routes/checkout.rb 87ef3ea8b002f957b7d9c4d1878038b0b7b787a1
+routes/orders.rb 58d7b3e2a90c51e7b518634d5b7e7339dbb9aece
+routes/products.rb fa5e0af769f448b40c419deccfbe4d7e8ca0fbc2
+routes/shoppingcart.rb 59c8977a8e845d0b9925b28466c186eee01c0b89
+routes/suppliers.rb acdfdc60f77732c4858fb90863d52ed0b735735b
+routes/users.rb 29ccdb3cf6a45103e340e28218243e3f935bedeb

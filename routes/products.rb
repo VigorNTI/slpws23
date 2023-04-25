@@ -1,3 +1,4 @@
+# Displays a page of available products on a page, valid products if the user is not logged in or is not admin, all products if the logged in user is admin
 get("/products") do
   if is_admin() then
     if params['supplier']
@@ -20,6 +21,7 @@ end
 
 product_auth_exceptions = ['showcase_img']
 
+# Checks admin privileges for matching routes to /products/* where '*' doesn't match any of the items in `products_auth_exceptions`, displays an error message if privileges are not granted
 before("/products/*") do
   if product_auth_exceptions.any? { |s| request.path_info.include? s } then
     return
@@ -27,6 +29,8 @@ before("/products/*") do
   check_admin()
 end
 
+# Displays a page for editing a product
+#
 get('/products/:id/edit') do
   user = get_user()
   product_id = params[:id]
@@ -36,6 +40,8 @@ get('/products/:id/edit') do
   slim(:'products/edit', locals:{user:user, product:product, supplier:supplier, suppliers:suppliers})
 end
 
+# Updates a product with passed values
+#
 post('/products/:id/update') do
   product_name = params["name"]
   supplier_name = params["supplier"]
@@ -44,7 +50,6 @@ post('/products/:id/update') do
   if params["visibility"] and params["visibility"] == "visible" then
     product_visible = 1
   end
-
 
   supplier = get_supplier_by_name(supplier_name)
   if !supplier then
@@ -61,12 +66,15 @@ post('/products/:id/update') do
   redirect('/')
 end
 
+# Returns a byte sequence with an image format of image/webp type
+#
 get('/products/:id/showcase_img') do
   response.headers['Content-Type'] = 'image/webp'
   img = get_product_img(params[:id])
   return img
 end
 
+# Creates a new product from passed values
 post('/products') do
   check_admin();
   product_name = params["name"]
@@ -79,6 +87,8 @@ post('/products') do
   redirect("/products/#{id}/edit")
 end
 
+# Hides a specified product
+#
 post('/products/:id/delete') do
   hide_product(params["id"])
   return "OK"
