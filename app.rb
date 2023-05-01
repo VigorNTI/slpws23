@@ -32,7 +32,7 @@ end
 
 # Displays a register form
 get('/register') do
-  slim(:register, locals:{user:get_user(session)})
+  slim(:register, locals:{user:nil})
 end 
 
 # Creates a new user
