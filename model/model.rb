@@ -92,10 +92,15 @@ module Model
   #
   # @return [nil] returns nothing
   def register_user(usr, pwd)
-    # Add user
-    pwd_digest = BCrypt::Password.create(password)
-    db = connect_db()
-    db.execute("INSERT INTO users (username, pwdigest, admin) VALUES (?,?,0)", usr, pwd_digest)
+    begin
+      # Add user
+      pwd_digest = BCrypt::Password.create(pwd)
+      db = connect_db()
+      db.execute("INSERT INTO users (username, pwdigest, admin) VALUES (?,?,0)", usr, pwd_digest)
+      return true
+    rescue
+      return false
+    end
   end
 
   # Products

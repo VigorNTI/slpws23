@@ -47,10 +47,10 @@ post('/users/new') do
     return "Lösenorden matchade inte"
   end
 
-  if register_user(username, password, password_confirm) == true then
+  if register_user(username, password) == true then
     redirect("/")
   else
-    redirect("/e")
+    return "Användarnamn taget!"
   end
 end
 
